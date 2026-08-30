@@ -59,7 +59,6 @@ benchmark-results/local/
 /benchmarks/
 /baseline/
 /scripts/gpu_qualification/
-/scripts/reference/
 /notebooks/private_beta_tpu_bovy_benchmark.ipynb
 /tests/benchmarks/
 /tests/development/test_accelerator_sweep_bundle.py

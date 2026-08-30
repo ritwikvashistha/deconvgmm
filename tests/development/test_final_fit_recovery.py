@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import platform
 from pathlib import Path
 import subprocess
 import sys
@@ -225,8 +226,21 @@ def test_phase4_recovery_fixture_is_immutable_auditable_and_pending(
     ]["not_claimed"]
 
 
+@pytest.mark.skipif(
+    not (sys.platform == "darwin" and platform.machine() == "arm64"),
+    reason=(
+        "byte-exact .npz regeneration is reproducible only on the macOS/arm64 "
+        "host where the fixture was pinned; NumPy/BLAS float rounding differs "
+        "across OS/ISA (e.g. Linux x86_64). Numerical recovery is still covered "
+        "by the other Phase 4 tests on every platform."
+    ),
+)
 def test_phase4_recovery_fixture_regenerates_byte_identically(tmp_path):
-    """The recorded generator reproduces both evidence files from scratch."""
+    """The recorded generator reproduces both evidence files from scratch.
+
+    Byte-exact reproduction is host-locked to the macOS/arm64 pinning
+    environment; see the skip marker above.
+    """
 
     regenerated_archive = tmp_path / FIXTURE_PATH.name
     regenerated_metadata = tmp_path / METADATA_PATH.name
