@@ -1,0 +1,23 @@
+{
+  "fixture_id": "xd-ip-cov-001",
+  "fixture_version": 1,
+  "contract_id": "xdgmm-jax.identity-xd",
+  "contract_version": "0.1.0-draft.1",
+  "archive": "identity_cov_001.npz",
+  "archive_sha256": "ac00c4db83ce1418dc37d3049c2d159e827ecf76ee276d9d2cd6bd1e598b7fdf",
+  "generator": "scripts/generate_phase1_conditioning_fixture.py",
+  "generator_sha256": "ec3cb6fc322dbdb5c27b1b9e4fd26743f10566e33e7c2ed4427f9d4001a03735",
+  "generator_numpy_version": "1.26.4",
+  "n_samples": 32,
+  "n_components": 3,
+  "dimension": 5,
+  "construction": "T = Q @ diag(geomspace(1, kappa, 5)) @ Q.T; V = 0.5 I; S = T - V",
+  "profiles": {
+    "float64_in": 100000000.0,
+    "float64_out": 1000000000000.0,
+    "float32_in": 10000.0,
+    "float32_out": 10000000.0
+  },
+  "note": "Selected-dtype rounding may move the measured condition number slightly from the conceptual kappa; tests record and bound the realized value."
+}
+

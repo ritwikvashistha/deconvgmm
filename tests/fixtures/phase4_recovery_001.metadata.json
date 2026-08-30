@@ -1,0 +1,313 @@
+{
+  "acceptance_rationale": {
+    "discrimination": "Absolute bounds are paired with improvement fractions, and the stored initial parameters fail the final-fit envelope, so returning the initialization cannot pass.",
+    "distribution_scale": "Stored 4096-draw latent holdouts provide label-invariant log-density and global-mixture-moment checks independent of the observations used for fitting.",
+    "generality": "The general envelope is wider because only two or three projected coordinates are observed per row and weighted effective component counts are smaller.",
+    "parameter_scale": "Weight, standardized-mean, and covariance bounds are broad finite-sample envelopes for component counts of order 275 or larger; they are not confidence intervals or exact-truth requirements."
+  },
+  "acceptance_thresholds": {
+    "general": {
+      "absolute_latent_log_density_mean_gap": 0.12,
+      "latent_log_density_rms_error": 0.45,
+      "max_absolute_weight_error": 0.06,
+      "max_mean_mahalanobis_error": 0.3,
+      "max_relative_covariance_frobenius_error": 0.35,
+      "maximum_alignment_kl_fraction_of_initial": 0.35,
+      "maximum_density_rms_fraction_of_initial": 0.65,
+      "mixture_covariance_relative_frobenius_error": 0.15,
+      "mixture_mean_l2_error": 0.12,
+      "total_symmetric_gaussian_kl": 0.25
+    },
+    "identity": {
+      "absolute_latent_log_density_mean_gap": 0.08,
+      "latent_log_density_rms_error": 0.3,
+      "max_absolute_weight_error": 0.05,
+      "max_mean_mahalanobis_error": 0.2,
+      "max_relative_covariance_frobenius_error": 0.25,
+      "maximum_alignment_kl_fraction_of_initial": 0.25,
+      "maximum_density_rms_fraction_of_initial": 0.5,
+      "mixture_covariance_relative_frobenius_error": 0.1,
+      "mixture_mean_l2_error": 0.1,
+      "total_symmetric_gaussian_kl": 0.15
+    }
+  },
+  "archive": "phase4_recovery_001.npz",
+  "archive_sha256": "79fc8d35723c10ce4874f53136a2bbe9721df2482dc64400726cafbbd9ae7cef",
+  "array_schema": {
+    "general_initial_covariances": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        3,
+        3
+      ]
+    },
+    "general_initial_means": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        3
+      ]
+    },
+    "general_initial_weights": {
+      "dtype": "float64",
+      "shape": [
+        2
+      ]
+    },
+    "general_labels": {
+      "dtype": "int32",
+      "shape": [
+        600
+      ]
+    },
+    "general_latent_holdout": {
+      "dtype": "float64",
+      "shape": [
+        4096,
+        3
+      ]
+    },
+    "general_latent_holdout_labels": {
+      "dtype": "int32",
+      "shape": [
+        4096
+      ]
+    },
+    "general_measurement_covariances": {
+      "dtype": "float64",
+      "shape": [
+        600,
+        3,
+        3
+      ]
+    },
+    "general_observations": {
+      "dtype": "float64",
+      "shape": [
+        600,
+        3
+      ]
+    },
+    "general_observed_mask": {
+      "dtype": "bool",
+      "shape": [
+        600,
+        3
+      ]
+    },
+    "general_projection_matrices": {
+      "dtype": "float64",
+      "shape": [
+        600,
+        3,
+        3
+      ]
+    },
+    "general_sample_weight": {
+      "dtype": "float64",
+      "shape": [
+        600
+      ]
+    },
+    "general_true_covariances": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        3,
+        3
+      ]
+    },
+    "general_true_means": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        3
+      ]
+    },
+    "general_true_weights": {
+      "dtype": "float64",
+      "shape": [
+        2
+      ]
+    },
+    "identity_initial_covariances": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        2,
+        2
+      ]
+    },
+    "identity_initial_means": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        2
+      ]
+    },
+    "identity_initial_weights": {
+      "dtype": "float64",
+      "shape": [
+        2
+      ]
+    },
+    "identity_labels": {
+      "dtype": "int32",
+      "shape": [
+        1200
+      ]
+    },
+    "identity_latent_holdout": {
+      "dtype": "float64",
+      "shape": [
+        4096,
+        2
+      ]
+    },
+    "identity_latent_holdout_labels": {
+      "dtype": "int32",
+      "shape": [
+        4096
+      ]
+    },
+    "identity_measurement_covariances": {
+      "dtype": "float64",
+      "shape": [
+        1200,
+        2,
+        2
+      ]
+    },
+    "identity_observations": {
+      "dtype": "float64",
+      "shape": [
+        1200,
+        2
+      ]
+    },
+    "identity_true_covariances": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        2,
+        2
+      ]
+    },
+    "identity_true_means": {
+      "dtype": "float64",
+      "shape": [
+        2,
+        2
+      ]
+    },
+    "identity_true_weights": {
+      "dtype": "float64",
+      "shape": [
+        2
+      ]
+    }
+  },
+  "bit_generator": "PCG64",
+  "evidence_source_sha256": {
+    "scripts/deterministic_npz.py": "26fbc5b542cebf966f6ee2e47fb5f3639510e1c8c32fa22cd29dc20612d51d52",
+    "tests/reference/recovery.py": "6c339271c18270364c382f7dd6a39a6f2b75d803ab2684e75887cb0bb24ec8bf"
+  },
+  "fit_controls": {
+    "covariance_ridge": 0.0,
+    "decrease_tol": 1e-08,
+    "factor_jitter": 0.0,
+    "max_iter": 100,
+    "tol": 1e-05
+  },
+  "fixture_id": "xd-phase4-final-fit-recovery-001",
+  "fixture_version": 1,
+  "formal_matrix_status": "Pending",
+  "general": {
+    "aggregate_projection_gram_condition": 1.3298810420124811,
+    "aggregate_projection_gram_eigenvalues": [
+      0.7282325355909355,
+      0.9046301182198935,
+      0.9684626432590651
+    ],
+    "component_counts": [
+      276,
+      324
+    ],
+    "contract_id": "xdgmm-jax.general-xd",
+    "contract_version": "0.2.0-draft.1",
+    "latent_dimension": 3,
+    "mask_counts": {
+      "011": 95,
+      "101": 84,
+      "110": 92,
+      "111": 329
+    },
+    "maximum_true_effective_condition": 2.4688713321433333,
+    "n_components": 2,
+    "n_samples": 600,
+    "observed_dimensions": [
+      2,
+      3
+    ],
+    "weighted_component_mass": [
+      277.1315516717467,
+      323.15201819013527
+    ]
+  },
+  "generator": "scripts/generate_phase4_recovery_fixture.py",
+  "generator_numpy_version": "1.26.4",
+  "generator_sha256": "4a0a82f869f1be6bf6464e0ed4dce50ae02300a31e9068c9b8d988c2da4a9c13",
+  "identity": {
+    "component_counts": [
+      515,
+      685
+    ],
+    "contract_id": "xdgmm-jax.identity-xd",
+    "contract_version": "0.1.0-draft.1",
+    "latent_dimension": 2,
+    "maximum_true_effective_condition": 2.3105600954686727,
+    "n_components": 2,
+    "n_samples": 1200
+  },
+  "npy_payload_sha256": {
+    "general_initial_covariances": "e100c304c9ce67866436b2e5ab5454e3f96064b93ed9215e99b2118db09b0174",
+    "general_initial_means": "60d5219da1b050b1b813152a09cb35f8d7d8e331e1ad4178ce18a7ad06d51b2a",
+    "general_initial_weights": "3715ea8091c57715974b1cdb07271ddcee33feda361fa125ca1f49095817ed45",
+    "general_labels": "b253c7c99c3f033db26bcde7e8d93c65728f3ab749e43c08ed436ad2ad685b47",
+    "general_latent_holdout": "d6ef0daf715872da18b8b1f292e7295299254099ba487f11eac5bf6f11a452cd",
+    "general_latent_holdout_labels": "5f8080f024b8e3c500dbb94b8905c7609ae9ca8a9b3aa2ae11e4514ebff35049",
+    "general_measurement_covariances": "50cd1e89e009a134e7f08aa520620d4df0a229e15d22e0479f83449a9828d1bf",
+    "general_observations": "638e969b05b912feb1e9f29dceb416892327ef8e1072faff88b00189342dd6b1",
+    "general_observed_mask": "a428dae31bc72927d807270c6375873f7fb6f41b28b01a346e17a494650d5fa8",
+    "general_projection_matrices": "5f99b755f55e9981d68e5bc47f8498b4859f9900dc77207577a784edce47157e",
+    "general_sample_weight": "7a0d38e9364f304a49568d3685e5ac91a3ab076355029719daf2d8a55a70cd57",
+    "general_true_covariances": "1bdd7dd99821c4d4c6a4d2cea86a7e6a48d10731100483c54d9dd1eb17033227",
+    "general_true_means": "b65102a0ea2402544ca6186d372c611f4e2908482db7a5879a0fffffd1787092",
+    "general_true_weights": "ebec031e81db192e40533312440a48174c804ecc7dfd2361d93a9e5488d39d6c",
+    "identity_initial_covariances": "ed6c5a03999f6c396fc53e1657ceecf36b5013070f2df765e19829e5dd1d7234",
+    "identity_initial_means": "042b7d7b20f181d9bde25c0ada308528f180dba9aa3c31be4fbf31820e55d540",
+    "identity_initial_weights": "dc5df699ec6761bc3417888621c7ed2d550717123a374424025689ffab3b302b",
+    "identity_labels": "74d6ef62666c154e3fa8e4e52edb0285f6b2e0dbd31fc3d17f8a5baff63a84d3",
+    "identity_latent_holdout": "e561884951a0730a5a483ce8c5bd3e64f41117a6c737d4a37d1d4fa8c6d0ede5",
+    "identity_latent_holdout_labels": "1cef1fd35cc1fa45521d44e036ab824caa5dd071d44c209006853919d8646dd9",
+    "identity_measurement_covariances": "59d35c822733cee221907c4c202fa0f88a1c5949421f6d9816234694ea1170f3",
+    "identity_observations": "452f22dba71f5edbad689cb7dee8bf247f449a4d318abfe22a42cb31a34f5d99",
+    "identity_true_covariances": "cc633df93c812379c33f4b9cd328e8a426401ddf0c885b902876b607746d8b61",
+    "identity_true_means": "3aaf5c04c603cb227dc0726f2d7c2e586a5547dd694fcb0c703a7ecb40603140",
+    "identity_true_weights": "1c47cf37baa2ff315d7f8db73a449ad22c81ecbd2b52e63945f8b63aa85d68a8"
+  },
+  "scientific_scope": {
+    "claim": "basin-conditioned statistical recovery from one fixed, perturbed user-supplied initialization",
+    "comparison": "permutation-invariant generating-parameter and independent latent-holdout density metrics after a complete fit",
+    "not_claimed": [
+      "one-step or implementation parity",
+      "global-optimum recovery",
+      "robustness to arbitrary initialization",
+      "multiple-restart selection",
+      "finite-sample equality to generating parameters",
+      "GPU or performance support"
+    ]
+  },
+  "seed": 20260825
+}

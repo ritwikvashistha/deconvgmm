@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "deconvgmm"
+version = "0.2.0b1"
+description = "Gaussian-mixture density deconvolution in JAX (Extreme Deconvolution and convMMD)"
+readme = "README.md"
+# Upper bound matches the qualified stack: numpy 1.26.4 / scipy 1.12.0 ship
+# wheels only through cp312. Newer Python forces an unqualified numpy 2.x stack.
+requires-python = ">=3.10,<3.13"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{ name = "Ritwik Vashistha" }]
+# jax is capped below 0.7: the beta is validated only against the jax 0.6.x
+# numerical stack (float32 Cholesky/factorization and scan semantics). Newer jax
+# releases change those behaviors and are not yet qualified.
+dependencies = ["jax>=0.6.2,<0.7", "numpy>=1.26"]
+keywords = [
+    "density deconvolution",
+    "gaussian mixture",
+    "empirical bayes",
+    "extreme deconvolution",
+    "maximum mean discrepancy",
+    "jax",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/ritwikvashistha/deconvgmm"
+Repository = "https://github.com/ritwikvashistha/deconvgmm"
+Issues = "https://github.com/ritwikvashistha/deconvgmm/issues"
+
+[tool.setuptools]
+packages = ["deconvgmm", "deconvgmm._impl"]
+include-package-data = false
+
+[tool.setuptools.package-dir]
+"" = "src"
+"deconvgmm._impl" = "development"
+
+[tool.setuptools.package-data]
+deconvgmm = ["py.typed"]

@@ -1,0 +1,24 @@
+{
+  "fixture_id": "xd-ip-em-002",
+  "fixture_version": 1,
+  "contract_id": "xdgmm-jax.identity-xd",
+  "contract_version": "0.1.0-draft.1",
+  "archive": "identity_em_002.npz",
+  "archive_sha256": "e555afd45af829bbdd2a8ee599fe379676aa5372dc1405114b36d645ad86839e",
+  "generator": "scripts/generate_phase1_em_fixture.py",
+  "generator_numpy_version": "1.26.4",
+  "bit_generator": "PCG64",
+  "seed": 20260825,
+  "n_samples": 128,
+  "n_components": 3,
+  "dimension": 3,
+  "purpose": "Fifteen-update exact-EM finiteness, monotonicity, and final-objective evidence",
+  "stored_arrays": [
+    "initial_covariances",
+    "initial_means",
+    "initial_weights",
+    "measurement_covariances",
+    "observations"
+  ]
+}
+

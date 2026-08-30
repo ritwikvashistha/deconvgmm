@@ -1,0 +1,84 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Packaging
+build/
+dist/
+*.egg-info/
+
+# Local environments and tooling
+.venv/
+venv/
+.env
+.DS_Store
+.ipynb_checkpoints/
+
+# JAX compilation caches and benchmark output
+.jax_cache/
+benchmark-results/local/
+
+# ---------------------------------------------------------------------------
+# Public-release manifest (v0.2.0b1): internal-only paths NOT published to the
+# public GitHub repo. These are kept locally but excluded from the initial
+# public commit. Rationale: internal planning/logs, provenance-sensitive
+# prototype evidence, and benchmark/accelerator/GPU evidence that embeds
+# internal host aliases, the maintainer's EID, and local absolute paths.
+# To commit one deliberately, use `git add -f <path>`.
+# ---------------------------------------------------------------------------
+
+# Local tooling / scratch
+.claude/
+
+# Internal planning, logs, and prompts
+/PROJECT_CONTEXT.md
+/ROADMAP.md
+/experiment.md
+/experiment_log.md
+/AGENTS.md
+
+# Provenance-sensitive preserved prototype (SHA-pinned; astroML-adjacent)
+/prototype/
+/tests/test_prototype_baseline.py
+/tests/test_prototype_characterization.py
+/scripts/capture_prototype_baseline.py
+
+# astroML parity evidence (pinned fixture embeds local absolute paths)
+/tests/development/test_identity_xd_astroml_parity.py
+/tests/fixtures/astroml_identity_ref_001.npz
+/tests/fixtures/astroml_identity_ref_001.metadata.json
+/scripts/generate_astroml_parity_fixture.py
+
+# Benchmark / accelerator / GPU / colab evidence (internal hosts, EID, paths)
+/benchmarks/
+/baseline/
+/scripts/gpu_qualification/
+/scripts/reference/
+/notebooks/private_beta_tpu_bovy_benchmark.ipynb
+/tests/benchmarks/
+/tests/development/test_accelerator_sweep_bundle.py
+/tests/development/test_gpu_qualification_bundle.py
+/tests/reference/test_bovy_general_parity_native.py
+
+# Internal docs (planning, prompts, logs, provenance, stale compat, benchmark reports)
+/docs/accelerator-benchmark-prompt.md
+/docs/accelerator-benchmark-report.md
+/docs/ai-usage-log.md
+/docs/baseline-report.md
+/docs/compatibility.md
+/docs/convmmd-missing-data-prompt.md
+/docs/deferred-0.1.0b2.md
+/docs/development-kernel-checkpoint.md
+/docs/github-beta-release-prompt.md
+/docs/maintainer-provenance-declaration.md
+/docs/naming-options.md
+/docs/new-method-integration-prompt.md
+/docs/private-beta-0.1.0b1.md
+/docs/provenance-audit.md
+

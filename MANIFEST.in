@@ -1,0 +1,13 @@
+include pyproject.toml
+include THIRD_PARTY_NOTICES.md
+recursive-include src *.py py.typed
+recursive-include development *.py
+prune baseline
+prune benchmarks
+prune docs
+prune examples
+prune prototype
+prune scripts
+prune tests
+global-exclude __pycache__
+global-exclude *.py[cod]

@@ -1,0 +1,59 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite it using the metadata below, and cite
+  the method papers listed under `references`.
+title: "DeconvGMM: Gaussian-mixture density deconvolution in JAX (XD and convMMD)"
+abstract: >-
+  DeconvGMM is a differentiable, JAX-native package for Gaussian-mixture density
+  deconvolution and empirical-Bayes denoising under known, heterogeneous
+  measurement noise. It offers two co-equal estimators behind a shared API: exact
+  Extreme Deconvolution (XD, expectation-maximization) and convolutional Maximum
+  Mean Discrepancy (convMMD, a likelihood-free / simulation-based objective).
+type: software
+authors:
+  - family-names: Vashistha
+    given-names: Ritwik
+    affiliation: The University of Texas at Austin
+    orcid: "https://orcid.org/0009-0004-5711-3222"
+version: 0.2.0b1
+license: MIT
+repository-code: "https://github.com/ritwikvashistha/deconvgmm"
+url: "https://github.com/ritwikvashistha/deconvgmm"
+keywords:
+  - density deconvolution
+  - Gaussian mixture model
+  - empirical Bayes
+  - extreme deconvolution
+  - maximum mean discrepancy
+  - JAX
+references:
+  - type: article
+    title: >-
+      Extreme deconvolution: Inferring complete distribution functions from
+      noisy, heterogeneous and incomplete observations
+    authors:
+      - family-names: Bovy
+        given-names: Jo
+      - family-names: Hogg
+        given-names: David W.
+      - family-names: Roweis
+        given-names: Sam T.
+    journal: The Annals of Applied Statistics
+    year: 2011
+    volume: 5
+    issue: "2B"
+    start: 1657
+    end: 1677
+    doi: 10.1214/10-AOAS439
+  - type: article
+    title: >-
+      Nonparametric Deconvolution and Denoising using Simulation Based Inference
+    authors:
+      - family-names: Vashistha
+        given-names: Ritwik
+      - family-names: Sarkar
+        given-names: Abhra
+      - family-names: Farahi
+        given-names: Arya
+    year: 2026
+    notes: "arXiv:2606.21907"
