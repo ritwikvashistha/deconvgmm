@@ -72,6 +72,7 @@ benchmark-results/local/
 /docs/baseline-report.md
 /docs/compatibility.md
 /docs/convmmd-missing-data-prompt.md
+/docs/convmmd-mnar-prompt.md
 /docs/deferred-0.1.0b2.md
 /docs/development-kernel-checkpoint.md
 /docs/github-beta-release-prompt.md
