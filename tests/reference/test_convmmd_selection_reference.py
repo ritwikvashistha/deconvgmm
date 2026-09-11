@@ -90,11 +90,21 @@ def test_transform_matches_defining_identity():
     transform = oracle.gaussian_window_transform(
         weights, means, covariances, a, precision
     )
-    # The stored transform equals the freshly computed one.
-    np.testing.assert_array_equal(transform.weights, fixture["oracle_selected_weights"])
-    np.testing.assert_array_equal(transform.means, fixture["oracle_selected_means"])
-    np.testing.assert_array_equal(
-        transform.covariances, fixture["oracle_selected_covariances"]
+    # The stored transform equals the freshly computed one. Byte-exact custody of
+    # the archive is enforced separately and platform-independently by the pinned
+    # SHA-256 digest (test_fixture_digest_is_pinned); here we only require the
+    # oracle to reproduce the stored values to float64 machine precision, since a
+    # recomputation on a different CPU/BLAS differs at the ULP level (~1e-15) —
+    # far below the declared machine-eps parity profile (rtol 5e-8/atol 5e-10).
+    np.testing.assert_allclose(
+        transform.weights, fixture["oracle_selected_weights"], rtol=1e-10, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        transform.means, fixture["oracle_selected_means"], rtol=1e-10, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        transform.covariances, fixture["oracle_selected_covariances"],
+        rtol=1e-10, atol=1e-12,
     )
 
     rng = np.random.Generator(np.random.PCG64(2026))
@@ -190,11 +200,16 @@ def test_selected_denoise_rows_sum_to_one_and_shapes():
     np.testing.assert_allclose(
         denoised.responsibilities.sum(axis=1), 1.0, rtol=0, atol=1e-13
     )
-    np.testing.assert_array_equal(
-        denoised.responsibilities, fixture["oracle_selected_responsibilities"]
+    # Recompute-vs-stored to float64 machine precision (see the note in
+    # test_transform_matches_defining_identity): byte-exact custody is the pinned
+    # digest's job; a cross-platform recomputation matches only at the ULP level.
+    np.testing.assert_allclose(
+        denoised.responsibilities, fixture["oracle_selected_responsibilities"],
+        rtol=1e-10, atol=1e-12,
     )
-    np.testing.assert_array_equal(
-        denoised.posterior_mean, fixture["oracle_selected_posterior_mean"]
+    np.testing.assert_allclose(
+        denoised.posterior_mean, fixture["oracle_selected_posterior_mean"],
+        rtol=1e-10, atol=1e-12,
     )
 
 
