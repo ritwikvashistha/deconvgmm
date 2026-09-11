@@ -1,9 +1,21 @@
 # convMMD under a known selection function (MNAR) — design note
 
-- Status: **development-stage design note for a planned future revision.** NOT
-  normative, NOT in scope for the current MAR (`observed_mask` / projection) task,
-  and NOT a capability claim. It records the mathematics and validation strategy so
-  MNAR is a real future phase rather than a hand-wave. See the MAR task plan in
+- **Update (contract `0.3.0-draft.1`): the `Ω(z)` case is now implemented and
+  normative.** Selection on the true value — the Gaussian-window analytic path
+  (machine-eps oracle) and the general-`Ω` SNIS Monte-Carlo path (statistical gate) —
+  is specified in the normative contract **§17** and implemented in
+  [`convmmd_selection.py`](convmmd_selection.py) (facade `deconvgmm.convmmd`,
+  `*_selected` family), with the `convmmd_selection_001` fixture and the
+  `CMMD-SEL-*` capability rows (all **Pending**). This note is retained as the
+  worked-out derivation; §17 supersedes it as the normative source. Still deferred:
+  selection on the observed value `Ω(x̃)` (reserved, homoscedastic-only) and any
+  **unknown** `Ω` (out of scope). One refinement found during implementation: the
+  robust `|Ψ|`-free `log w̃_k` **equals** `log w̃_k` exactly (the `(2π)^{D/2}|Ψ|^{1/2}`
+  factors cancel), so `Z_θ` is well-conditioned everywhere including `Ω→1` (`→1`) — it
+  is not ill-conditioned as §6.3/§4 originally supposed.
+- Status: **development-stage design note.** The `Ω(z)` mathematics below is now
+  realized by contract §17 (normative); the note itself remains non-normative
+  development material. See the MAR task plan in
   [`convmmd_missing_data_plan.md`](convmmd_missing_data_plan.md).
 - Notation follows `docs/convmmd-model-contract.md`:
   `q_θ(z) = Σ_k π_k N(z; μ_k, Σ_k)`; observed `x̃_i = P_i z_i + ε_i`,

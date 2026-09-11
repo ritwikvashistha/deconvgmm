@@ -12,7 +12,13 @@ co-equal estimators behind a shared, differentiable, accelerator-ready API:
 - **convMMD** — a likelihood-free / simulation-based objective that matches the
   noise-convolved model to the data via a convolutional Maximum Mean Discrepancy
   (`deconvgmm.convmmd`). It also handles **per-coordinate missing-at-random (MAR)**
-  observations through an explicit boolean observed-mask path.
+  observations through an explicit boolean observed-mask path, and, added in this
+  beta, a **known selection function (MNAR)** — an analytic Gaussian-window path and
+  a general-completeness importance-sampling path, including heteroscedastic
+  selection on the observed value composed with missing coordinates. Like every
+  convMMD capability, the missing-data and selection operators are **Pending**
+  (exercised by the test suite, not advertised as Supported) and carry **no
+  performance claim**; an unknown selection function remains out of scope.
 
 Both share the same full-covariance Gaussian-mixture model and the same
 empirical-Bayes denoiser, so they differ only in **how the prior is fit**. The
@@ -35,7 +41,7 @@ with the build appropriate for your CPU or accelerator.
 Install the tagged release from GitHub:
 
 ```bash
-pip install "git+https://github.com/ritwikvashistha/deconvgmm.git@v0.2.0b1"
+pip install "git+https://github.com/ritwikvashistha/deconvgmm.git@v0.3.0b1"
 ```
 
 Or from a source checkout:

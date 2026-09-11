@@ -22,6 +22,7 @@ jax.config.update("jax_enable_x64", True)
 from development import convmmd as impl_convmmd
 from development import convmmd_fit as impl_convmmd_fit
 from development import convmmd_grouped as impl_convmmd_grouped
+from development import convmmd_selection as impl_convmmd_selection
 from development import general_validation as impl_general_validation
 
 
@@ -40,6 +41,7 @@ def _load_facade():
         ("deconvgmm._impl.convmmd", impl_convmmd),
         ("deconvgmm._impl.convmmd_fit", impl_convmmd_fit),
         ("deconvgmm._impl.convmmd_grouped", impl_convmmd_grouped),
+        ("deconvgmm._impl.convmmd_selection", impl_convmmd_selection),
         ("deconvgmm._impl.general_validation", impl_general_validation),
     ):
         if module is None:
@@ -68,6 +70,7 @@ def test_facade_reexports_exact_implementation_objects():
         impl_convmmd,
         impl_convmmd_fit,
         impl_convmmd_grouped,
+        impl_convmmd_selection,
         impl_general_validation,
     )
     for name in facade.__all__:

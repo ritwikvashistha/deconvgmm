@@ -248,7 +248,7 @@ def _assert_container_and_array_metadata(path: Path) -> None:
 
 
 def test_temporary_serialization_api_is_exact(serialization, version_module):
-    assert version_module.__version__ == "0.2.0b1"
+    assert version_module.__version__ == "0.3.0b1"
 
     expected_constants = {
         "FORMAT_ID": FORMAT_ID,
@@ -370,7 +370,7 @@ def test_parameter_round_trip_preserves_tag_dtype_values_and_cpu_placement(
     assert isinstance(loaded.parameters, Params)
     assert loaded.contract_id == contract_id
     assert loaded.contract_version == contract_version
-    assert loaded.package_version == "0.2.0b1"
+    assert loaded.package_version == "0.3.0b1"
     assert_arrays_bits_equal(loaded.parameters, parameters)
     manifest = manifest_from(path)
     assert manifest["contract_id"] == contract_id
@@ -531,7 +531,7 @@ def test_parameter_manifest_has_exact_schema(serialization, tmp_path):
     assert manifest["record_version"] == PARAMETERS_RECORD_VERSION
     assert manifest["contract_id"] == CONTRACT_ID
     assert manifest["contract_version"] == CONTRACT_VERSION
-    assert manifest["package_version"] == "0.2.0b1"
+    assert manifest["package_version"] == "0.3.0b1"
     assert manifest["model"] == {
         "dtype": "float64",
         "latent_dimension": 2,
