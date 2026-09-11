@@ -33,7 +33,7 @@ from .convmmd import (
 Array = jax.Array
 
 CONVMMD_CONTRACT_ID = "xdgmm-jax.convmmd"
-CONVMMD_CONTRACT_VERSION = "0.2.0-draft.1"
+CONVMMD_CONTRACT_VERSION = "0.5.0-draft.1"
 
 # AdamW constants (mirroring the reference training recipe).
 _BETA1 = 0.9

@@ -42,6 +42,9 @@ benchmark-results/local/
 /experiment.md
 /experiment_log.md
 /AGENTS.md
+/development/convmmd_obsmar_continuation_prompt.md
+/development/convmmd_pygmmis_comparison_plan.md
+/development/convmmd_showcase_notebook_prompt.md
 
 # Provenance-sensitive preserved prototype (SHA-pinned; astroML-adjacent)
 /prototype/
@@ -73,6 +76,7 @@ benchmark-results/local/
 /docs/compatibility.md
 /docs/convmmd-missing-data-prompt.md
 /docs/convmmd-mnar-prompt.md
+/docs/convmmd-mnar-general-prompt.md
 /docs/deferred-0.1.0b2.md
 /docs/development-kernel-checkpoint.md
 /docs/github-beta-release-prompt.md
@@ -81,4 +85,8 @@ benchmark-results/local/
 /docs/new-method-integration-prompt.md
 /docs/private-beta-0.1.0b1.md
 /docs/provenance-audit.md
+
+# Deferred reader-facing docs (not internal; slated for a later release)
+/docs/convmmd-missing-data-primer.pdf
+/docs/convmmd-missing-data-primer.tex
 

@@ -15,7 +15,7 @@ authors:
     given-names: Ritwik
     affiliation: The University of Texas at Austin
     orcid: "https://orcid.org/0009-0004-5711-3222"
-version: 0.2.0b1
+version: 0.3.0b1
 license: MIT
 repository-code: "https://github.com/ritwikvashistha/deconvgmm"
 url: "https://github.com/ritwikvashistha/deconvgmm"

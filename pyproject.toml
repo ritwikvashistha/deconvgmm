@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "deconvgmm"
-version = "0.2.0b1"
+version = "0.3.0b1"
 description = "Gaussian-mixture density deconvolution in JAX (Extreme Deconvolution and convMMD)"
 readme = "README.md"
 # Upper bound matches the qualified stack: numpy 1.26.4 / scipy 1.12.0 ship
