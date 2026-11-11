@@ -16,7 +16,9 @@ jobs:
   cpu:
     name: qualified-cpu-py${{ matrix.python }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 0.3.0b1's suite took 20-24 min here; 0.4.0b1 adds the convMMD recipe tests,
+    # including a slow end-to-end reproduction of one J1 repair.
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:

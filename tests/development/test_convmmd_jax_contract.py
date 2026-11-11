@@ -310,19 +310,21 @@ def test_analytic_reported_loss_is_exact_at_returned_params():
 
 
 def test_n_steps_one_does_not_spuriously_converge():
-    """A single-step fit must not claim convergence via an out-of-bounds
-    two-point change."""
+    """A single-step fit from a non-stationary start must not claim convergence:
+    ``converged`` is the gradient certificate ``max|grad| <= grad_tol`` at the
+    returned point, not a loss-change test."""
 
     _, observations, noise, bandwidths = _problem()
     result = fit_analytic(_unconstrained(), observations, noise, bandwidths, n_steps=1)
+    assert float(result.max_abs_grad) > float(result.grad_tol)
     assert not bool(result.converged)
     assert int(result.status) == int(ConvMMDFitStatus.MAX_ITER)
 
 
 def test_mc_fit_never_reports_spurious_convergence():
-    """The stochastic MC path uses different keys per step, so the two-point
-    convergence test is meaningless; it must never report CONVERGED -- even when
-    the parameters are frozen at an optimum (learning_rate=0)."""
+    """The stochastic MC path uses different keys per step, so its gradient is a
+    single noisy estimate and cannot certify stationarity; it must never report
+    CONVERGED -- even when the parameters are frozen (learning_rate=0)."""
 
     from development.convmmd_fit import fit_mc
 

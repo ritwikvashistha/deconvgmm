@@ -39,6 +39,16 @@ projected inflated covariance ``P_i Sigma_k P_i^T + S_i`` — machine-epsilon an
 Gaussian window, per-object projected SNIS for a general ``Omega``, still with no noise model;
 it reduces to §17.13 at ``P_i = I`` and to the base §16 masked loss at ``Psi^{-1} = 0``. Every
 convMMD capability remains **Pending**.
+
+Contract revision ``0.6.0-draft.1`` makes the analytic fits' ``converged`` an honest
+**gradient certificate** (``max|grad| <= grad_tol`` at the returned point; §9) and adds
+the **robust fit recipe** (§18): :func:`fit_convmmd_recipe` fits ``k`` components from
+the data alone with the recipe the robustness campaign adopted — a K + 1 greedy
+start, a covariance floor inside the loss, saddle-aware constant-rate Adam, and
+witness repair kept only under a loss, conditioning and paired-z test. Its health
+check (``collapsed``) and an unescaped saddle (``saddle``) are flags; ``status`` is
+the gradient certificate alone. It runs in float64 only and validates its inputs
+eagerly. Its rows are **Pending**, with no performance claim.
 """
 
 from ._impl.convmmd import (
@@ -81,6 +91,14 @@ from ._impl.convmmd_grouped import (
     grouped_mc_loss,
     grouped_posterior_components,
     median_bandwidths_masked,
+)
+from ._impl.convmmd_recipe import (
+    ConvMMDHealth,
+    ConvMMDRecipeResult,
+    ConvMMDRepairMove,
+    ConvMMDSaddleFit,
+    ConvMMDWitness,
+    fit_convmmd_recipe,
 )
 from ._impl.convmmd_selection import (
     CallableSelection,
@@ -146,9 +164,14 @@ __all__ = [
     "ConvMMDFitResult",
     "ConvMMDFitState",
     "ConvMMDFitStatus",
+    "ConvMMDHealth",
     "ConvMMDParams",
+    "ConvMMDRecipeResult",
+    "ConvMMDRepairMove",
     "ConvMMDResultMetadata",
+    "ConvMMDSaddleFit",
     "ConvMMDUnconstrained",
+    "ConvMMDWitness",
     "GaussianSelection",
     "GroupedGeneralInputs",
     "NoInformativeWeightError",
@@ -183,6 +206,7 @@ __all__ = [
     "expected_rbf_kernel",
     "fit_analytic",
     "fit_analytic_state",
+    "fit_convmmd_recipe",
     "fit_masked_analytic",
     "fit_masked_analytic_state",
     "fit_masked_mc",

@@ -1693,7 +1693,7 @@ def fit_selected_mc_state(
     The selection spec is fixed; gradients flow through the reparameterized draws
     and ``omega`` to the (unconstrained) mixture parameters. Fixed-step (the SNIS
     objective is stochastic and biased at finite ``num_samples``); it MUST NOT report
-    a spurious ``CONVERGED`` from a noisy two-point change.
+    ``CONVERGED`` (its gradient is a noisy estimate and cannot certify stationarity).
     """
 
     def loss_and_grad(unc, step_key):

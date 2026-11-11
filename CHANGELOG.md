@@ -6,6 +6,50 @@ Every convMMD capability below is **Pending** (specified and exercised by the
 development test suite, not advertised as Supported) and carries **no performance
 claim** (`performance_claim: none`).
 
+## 0.4.0b1 — 2026-11-11 (GitHub beta; tag pending maintainer approval)
+
+### Added — convMMD robust fit recipe
+
+The convMMD contract `xdgmm-jax.convmmd` and its capability matrix are bumped
+`0.5.0-draft.1 → 0.6.0-draft.1`. All new rows are **Pending**, with
+`performance_claim: none`.
+
+- **`deconvgmm.convmmd.fit_convmmd_recipe(observations, measurement_covariances, k, *, key)`**
+  (contract §18) fits `k` components from the data alone. It uses the recipe the
+  convMMD robustness campaign adopted (`kplus1+floor:HU Kkz`, experiment J1):
+  - a K + 1 greedy k-means++ start polished by zero-noise EM;
+  - a covariance floor applied as a ridge inside the loss;
+  - constant-rate Adam in 200-step chunks, stopped at a gradient certificate whose
+    curvature is checked (exact for P ≤ 80, Lanczos above) and saddles escaped;
+  - witness repair (moving the lowest-weight component to the witness peak), kept only
+    when the loss falls, conditioning does not fall, and the paired z is at least 3.
+
+  The health check (`collapsed`) and an unescaped saddle (`saddle`) are **flags**;
+  `status` is the gradient certificate alone. The function runs in float64 only and
+  validates its inputs eagerly. Its result types are re-exported too:
+  `ConvMMDRecipeResult`, `ConvMMDHealth`, `ConvMMDSaddleFit`, `ConvMMDRepairMove` and
+  `ConvMMDWitness`.
+- **Evidence.** Over all 390 of J1's datasets, the recipe given J1's start reproduces
+  J1's decisions and losses (to 1e-9) on every dataset. As shipped it recovers the
+  truth on 387/390, as J1 does. Unit tests:
+  `tests/development/test_convmmd_recipe{,_phase2,_inputs}.py`. Cross-check:
+  `scripts/convmmd_j1_crosscheck/`.
+- **Analytic fits** gain `schedule="constant"` (fixed-rate AdamW),
+  `stop_at_certificate`, and a `grad_tol` control. Their defaults are unchanged.
+
+### Changed
+
+- **`converged` is now a gradient certificate** for the deterministic analytic fits:
+  `fit_analytic`, the masked fits and the analytic selection fits (contract §9). They
+  report `converged` / `CONVERGED` iff `max|grad| <= grad_tol` (default `1e-6`) at the
+  returned parameters. The old two-point loss-change test reported convergence at
+  points far from stationary. Expect fewer `CONVERGED` and more `MAX_ITER` at the same
+  `n_steps`. The `tol` keyword is still accepted but no longer used. The Monte-Carlo
+  fits still never report `CONVERGED`.
+- `ConvMMDFitState` and `ConvMMDFitResult` gain the fields `max_abs_grad` and
+  `grad_tol`, before `metadata`. Code that unpacks a result by position must be updated.
+- `ConvMMDFitStatus.COMPONENT_COLLAPSED = 5` is added, reserved, and never set.
+
 ## 0.3.0b1 — 2026-09-10 (GitHub beta; tag pending maintainer approval)
 
 ### Added — convMMD known-selection (MNAR) extension

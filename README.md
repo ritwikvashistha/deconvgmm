@@ -12,13 +12,16 @@ co-equal estimators behind a shared, differentiable, accelerator-ready API:
 - **convMMD** — a likelihood-free / simulation-based objective that matches the
   noise-convolved model to the data via a convolutional Maximum Mean Discrepancy
   (`deconvgmm.convmmd`). It also handles **per-coordinate missing-at-random (MAR)**
-  observations through an explicit boolean observed-mask path, and, added in this
-  beta, a **known selection function (MNAR)** — an analytic Gaussian-window path and
-  a general-completeness importance-sampling path, including heteroscedastic
-  selection on the observed value composed with missing coordinates. Like every
-  convMMD capability, the missing-data and selection operators are **Pending**
-  (exercised by the test suite, not advertised as Supported) and carry **no
-  performance claim**; an unknown selection function remains out of scope.
+  observations through an explicit boolean observed-mask path, and a **known
+  selection function (MNAR)** — an analytic Gaussian-window path and a
+  general-completeness importance-sampling path, including heteroscedastic
+  selection on the observed value composed with missing coordinates. New in this
+  beta, a **robust fit recipe** (`fit_convmmd_recipe`) fits from the data alone:
+  it chooses the start, the covariance floor, the stopping point and any repairs,
+  and every analytic fit's `converged` is now a gradient certificate. Like every
+  convMMD capability, these operators are **Pending** (exercised by the test suite,
+  not advertised as Supported) and carry **no performance claim**; an unknown
+  selection function remains out of scope.
 
 Both share the same full-covariance Gaussian-mixture model and the same
 empirical-Bayes denoiser, so they differ only in **how the prior is fit**. The
@@ -35,13 +38,13 @@ explicit about PRNG, and correct at float32 and float64.
 ## Install
 
 This beta is distributed from GitHub (not yet published to PyPI). It requires
-Python 3.10–3.13, JAX 0.6.x, and NumPy ≥ 1.26; `jax`/`jaxlib` must be installed
+Python 3.10–3.12, JAX 0.6.x, and NumPy ≥ 1.26; `jax`/`jaxlib` must be installed
 with the build appropriate for your CPU or accelerator.
 
 Install the tagged release from GitHub:
 
 ```bash
-pip install "git+https://github.com/ritwikvashistha/deconvgmm.git@v0.3.0b1"
+pip install "git+https://github.com/ritwikvashistha/deconvgmm.git@v0.4.0b1"
 ```
 
 Or from a source checkout:
@@ -82,6 +85,22 @@ init = convmmd.ConvMMDUnconstrained(alphas=..., means=..., unconstrained_L=...)
 result = convmmd.fit_analytic(init, observations, noise, bandwidths, n_steps=300)
 denoised = convmmd.denoise(result.parameters, observations, noise)
 ```
+
+Or let the robust fit recipe choose the start, floor, stopping and repairs
+(contract §18). It runs in float64 only, with float64 inputs:
+
+```python
+import jax
+jax.config.update("jax_enable_x64", True)            # before creating any arrays
+
+fit = convmmd.fit_convmmd_recipe(observations, noise, 3, key=jax.random.PRNGKey(0))
+fit.converged, fit.collapsed, fit.saddle   # certificate, then two diagnostic flags
+```
+
+`converged` is a gradient certificate (`max|grad| <= grad_tol` at the returned
+parameters) for every analytic convMMD fit. The recipe's `collapsed` and `saddle`
+are flags that never change `status`. Like every convMMD capability, the recipe is
+**Pending**.
 
 A worked, fair comparison of the two methods on shared ground-truth tasks is in
 [`notebooks/convmmd_xdgmm_comparison.ipynb`](notebooks/convmmd_xdgmm_comparison.ipynb).

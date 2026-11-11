@@ -2,7 +2,7 @@
 
 - Contract ID: `xdgmm-jax.convmmd` (historical identifier retained after the
   package rename to DeconvGMM; do not rename)
-- Contract version: `0.5.0-draft.1`
+- Contract version: `0.6.0-draft.1`
 - Status: normative design target for the convMMD development effort (next beta)
 - Method: convolutional Maximum Mean Discrepancy (convMMD), a likelihood-free
   / simulation-based density deconvolution and empirical-Bayes denoiser
@@ -11,7 +11,7 @@
   work; see the provenance note in §14)
 - Applies to: [`xdgmm-jax.convmmd` capability
   matrix](convmmd-capability-matrix.md)
-- Last updated: 2026-08-31
+- Last updated: 2026-11-11
 
 Revision `0.2.0-draft.1` adds per-coordinate **missing-at-random (MAR)** data as a
 backward-compatible input form (§16); §§1–15 are unchanged except the comparison
@@ -70,6 +70,20 @@ conditional-expectation completeness over unmeasured coordinates is model-depend
 of scope). This closes the one composition pygmmis alone handled; convMMD does the missing
 part by **exact marginalization** (\(P_i\)) rather than covariance inflation, and needs no
 undetected-noise model. No performance claim follows.
+
+Revision `0.6.0-draft.1` changes **how fits are stopped and reported**, not the model or the
+objective. (1) The deterministic analytic fits' `converged` is now a **gradient
+certificate**: \(\max|\nabla|\le\) `grad_tol` (default `1e-6`) at the returned unconstrained
+parameters (§9). It replaces a two-point loss-change test that reported convergence at
+points far from stationary (robustness finding B1). The fit results gain `max_abs_grad` and
+`grad_tol`, and the fits gain a `schedule="constant"` option and `stop_at_certificate`;
+their defaults are unchanged. (2) A new **robust fit recipe** (new §18) fits \(K\)
+components from the data alone: a \(K+1\) greedy start, a covariance floor inside the loss,
+saddle-aware constant-rate Adam, and witness repair kept only under a loss, conditioning and
+paired-\(z\) test. This is the recipe the robustness campaign adopted (`kplus1+floor:HU Kkz`).
+Its health check and an unescaped saddle are reported as **flags**; `status` stays the
+gradient certificate. §8 gains the recipe's row and §11 a note on its start; §§2–7, 10
+and 12–17 are unchanged. No performance claim follows.
 
 This document defines the mathematical and behavioral contract the production
 convMMD implementation must satisfy. It is derived **independently** from the
@@ -289,6 +303,7 @@ explicit key and converge to the closed form.
 | `convmmd_posterior_components` | canonical params, \(X\), \(S\) | \(r,m\) `(N,K)`,`(N,K,D)` | responsibilities + component means |
 | `to_canonical` / `to_unconstrained` | params | params | §6 bijection |
 | `median_bandwidths` | \(X\), subsample, seed | \(\Gamma\) `(G,)` | §5 host heuristic |
+| `fit_convmmd_recipe` | \(X\), \(S\), \(K\), key | `ConvMMDRecipeResult` | §18 robust fit recipe; host driver, float64 only |
 
 Inference operations **MAY** accept a batch axis. All operations require a single
 declared compute dtype (float32 or float64) and **MUST NOT** silently upcast.
@@ -309,10 +324,16 @@ declared compute dtype (float32 or float64) and **MUST NOT** silently upcast.
   `FitStatus`/rollback semantics. The reported fit loss is the objective
   recomputed at the returned parameters (exact for the analytic path; a single
   honest estimate for the Monte-Carlo path) — it **MUST NOT** be a minimum over
-  noisy per-step estimates. A two-point convergence claim is only valid for the
-  deterministic analytic objective with at least two steps; the stochastic
-  Monte-Carlo fit is fixed-step and **MUST NOT** report `CONVERGED` from a noisy
-  two-point change.
+  noisy per-step estimates.
+- **Convergence is a gradient certificate** (as of `0.6.0-draft.1`). A
+  deterministic analytic fit reports `converged` (and `CONVERGED`) **iff**
+  \(\max|\nabla_{\text{unconstrained}}\mathcal L|\le\) `grad_tol` at the returned
+  parameters, and reports that `max_abs_grad` and `grad_tol` with the result. A
+  loss-change test **MUST NOT** be used: it reports convergence at points far from
+  stationary. The stochastic Monte-Carlo fit is fixed-step and **MUST NOT** report
+  `CONVERGED` from a noisy gradient or loss change. `ConvMMDFitStatus.COMPONENT_COLLAPSED`
+  is reserved and never set; a collapsed component is reported by the §18 recipe
+  as the `collapsed` flag (§18.5).
 
 ## 10. JAX contract
 
@@ -333,7 +354,9 @@ Initialization is host-side and outside the JAX/autodiff contract. A
 scikit-learn `GaussianMixture` warm start (the prototype's approach) is a
 supported host convenience with recorded `random_state`; the canonical numerical
 core also accepts explicit user-supplied initial parameters (`user_supplied`
-provenance), which is the reproducible path used by fixtures and tests.
+provenance), which is the reproducible path used by fixtures and tests. The §18
+recipe has its own seeded start (a \(K+1\) greedy k-means++ start, §18.1), drawn
+from an explicit JAX key.
 
 ## 12. Relationship to Extreme Deconvolution
 
@@ -1201,3 +1224,189 @@ SNIS leaf takes one explicit key. Mask grouping, window inversion, and row resto
 host-only and outside the JIT/autodiff contract. Non-finite \(S_i\), \(\Sigma_k\), \(\Psi\), or
 \(\Omega\) outputs fail actionably at the eager boundary; a degenerate \(C_{k,i}\) surfaces as a
 visible `NaN`, never a finite success.
+
+## 18. Robust fit recipe (as of `0.6.0-draft.1`)
+
+`fit_convmmd_recipe(observations, measurement_covariances, k, *, key, ...)` fits a
+\(K\)-component mixture from the data alone, with no user-supplied start. It is the recipe
+the robustness campaign adopted, `kplus1+floor:HU Kkz` (experiment J1, 2026-10-25;
+`docs/convmmd-recipe-crosscheck.md`). It changes how the §4 analytic objective is
+**started, ridged, stopped and repaired**; it does not change the objective, the
+parameterization or the denoiser. The defaults below are normative for this revision.
+Every documented keyword can override one of them; an override is the caller's
+experiment, not this contract's recipe.
+
+### 18.1 Start
+
+Seed \(K+1\) centres by greedy k-means++ (10 candidate draws per centre, keeping the
+draw that most lowers the summed squared distance), drawn from `key`. Assign rows to
+the nearest centre. A cluster with more than \(D\) members starts at its sample mean
+and covariance; otherwise it starts at its centre with covariance
+\(\overline{\mathrm{var}}(x)\,I\). Weights are proportional to cluster size (at least
+one), and every covariance is eigenvalue-floored at \(0.01\,\overline{\mathrm{var}}(x)\).
+Run 20 zero-noise XD EM steps, subtract the mean noise \(\bar S\) from every covariance,
+and floor every eigenvalue at \(0.01\,\overline{\mathrm{var}}(x)\) again. Then drop the
+smallest-weight component and renormalize. The EM warm-up's `FitStatus` is returned as
+`initialization_status`.
+
+### 18.2 Covariance floor (a ridge inside the loss)
+
+\(f = 0.03\times\mathrm{median}\) of every row's noise-variance diagonal (all rows and
+coordinates). The optimizer moves \(\Sigma_k\); the loss is evaluated on
+\(\Sigma_k + fI\). The returned `parameters` are that floored mixture, so `loss`
+recomputes exactly at `parameters`. The returned `unconstrained` coordinates map to the
+un-floored \(\Sigma_k\).
+
+### 18.3 Bandwidths
+
+By default, the §5 median heuristic on every row when \(N\le 2000\). Otherwise it runs on
+2000 distinct rows drawn without replacement with `fold_in(key, 3)`. This keeps the
+pairwise-distance array at \(2000^2\times D\) instead of \(N^2\times D\). Explicit
+`bandwidths` override it.
+
+### 18.4 Saddle-aware optimization and the certificate
+
+- **Update.** Constant-rate AdamW with learning rate \(3\times10^{-2}\), weight decay 0,
+  \(\beta=(0.9, 0.999)\), \(\epsilon=10^{-8}\) and global-norm clip 1.0. It runs in
+  chunks of 200 steps, at most 3000 steps per fit. The §9 rollback applies: a non-finite
+  step is never committed, and the fit returns its last finite iterate with
+  `NUMERICAL_FAILURE`.
+- **Certificate.** After each chunk the fit is certified iff
+  \(\max|\nabla|\le\) `grad_tol` (\(10^{-6}\)). A certified point is then checked for
+  negative curvature: the smallest eigenvalue \(\lambda\) of the Hessian, projected onto
+  an orthonormal basis of the identifiable parameters, of dimension
+  \(P=(K-1)+KD+KD(D+1)/2\). The weight logits contribute Helmert contrasts; the means
+  and the lower triangle of each Cholesky factor contribute unit columns. The check uses:
+  - for \(P\le80\), the exact eigenvalue; the point is a minimum iff
+    \(\lambda\ge-10^{-10}\);
+  - above that, Lanczos with \(m=80\) and full reorthogonalization, started from
+    `fold_in(fold_in(fold_in(key, 7), move), check)`; the point is a minimum iff
+    \(\lambda\ge-10^{-6}\).
+
+  A minimum stops the fit.
+- **Escape.** At negative curvature, the fit line-searches at
+  \(\pm(0.01, 0.03, 0.1, 0.3, 1)\) along the eigenvector. It takes the lowest finite loss
+  if that is below the current loss, resets the Adam moments and continues. The escape
+  budget is 3. If the budget is spent, or no step lowers the loss, the fit stops there
+  with the **`saddle` flag** set.
+- **Status.** `status` and `converged` are the certificate alone (§9): `CONVERGED` iff
+  certified, otherwise `MAX_ITER` or `NUMERICAL_FAILURE`. `saddle` **MUST NOT** change
+  them.
+
+### 18.5 Health check (a flag)
+
+On the returned (floored) mixture, let \(s_k\) be the geometric mean of
+\(\Sigma_k\)'s eigenvalues. Then \(b=\max_k s_k/\mathrm{median}_k s_k\) and
+\(\kappa=\min_k\lambda_{\min}(\Sigma_k)/\lambda_{\max}(\Sigma_k)\), and
+`collapsed` \(=(b>3)\lor(\kappa<0.03)\), reported with `health` \((b,\kappa)\).
+`collapsed` **MUST NOT** change `status`: in J1's records it fired on 39/40 hetero-broad
+and 31/40 hetero-thin fits that had recovered the truth. The recipe uses it only as a
+repair trigger (§18.6).
+
+### 18.6 Witness repair (HU trigger, Kkz keep rule)
+
+- **Witness.** For the current mixture, the witness at a latent point \(z\) is
+  \(w(z)=\frac1N\sum_i h_i(z)\), where
+  \(h_i(z)=\frac1G\sum_\gamma\big[G_\gamma(x_i-z;S_i)-\sum_k\pi_k
+  G_\gamma(\mu_k-z;\Sigma_k+2S_i)\big]\) and \(G_\gamma\) is the §4 expected RBF
+  kernel. The loss falls fastest where \(w\) peaks when weight moves onto a point mass
+  there.
+- **Candidates.** The candidates \(z=x_c\) are every row when \(N\le2000\); otherwise
+  2000 rows drawn with `fold_in(key, 99)`. Over them, the fit reports:
+  - the raw peak and its row;
+  - the leave-one-out peak, which drops row \(c\)'s own term;
+  - its standard error, and \(t=\) leave-one-out peak / SE.
+- **Trigger (HU).** A move is attempted iff any of these fire:
+  - H: `collapsed`;
+  - F: raw peak \(>5\times10^{-3}\);
+  - Z: \(t>4\).
+- **Move.** The lowest-weight component is reborn at the raw-peak row:
+  - its mean is the mean of the \(\max(10, \lfloor N/100\rfloor)\) nearest rows (every
+    row if \(N<10\));
+  - its covariance is their sample covariance minus their mean noise, eigenvalue-floored
+    at \(0.01\,\overline{\mathrm{var}}(x)\);
+  - its weight is \(\max(\pi_j, 0.05)\), with the others rescaled.
+
+  The mixture is then refitted as in §18.4.
+- **Keep rule (Kkz).** A move is **kept** iff all three hold:
+  - the loss falls by more than \(10^{-9}\);
+  - \(\kappa\) does not fall;
+  - the paired \(z=-\bar d/(\mathrm{sd}(d)/\sqrt N)\ge3\), where \(d\) is the per-row
+    loss change.
+- **Chain.** At most 2 moves. The first move not kept, or the first check where nothing
+  fires, ends the chain. The returned fit is the last kept one, or the base fit if none
+  was kept. `base` and every examined move (`repairs`) are reported, and `total_steps`
+  counts the Adam updates over all fits.
+
+### 18.7 Inputs, errors and outputs
+
+The recipe validates eagerly and runs in **float64 only**. The certificate, curvature
+and keep thresholds above are float64 ones, so a float32 run would not be this recipe.
+- **Inputs.**
+  - `observations`: finite real float64 `(N, D)` with \(D\ge1\) and \(N>K\).
+  - `measurement_covariances`: finite float64 `(N, D, D)`, symmetric
+    positive-semidefinite within the package tolerance (canonicalized as by
+    `full_noise`).
+  - Optional `bandwidths`: non-empty 1-D, positive, float64.
+  - Counts and rates must be in range.
+- **Errors.**
+  - A violation raises `ValidationError`.
+  - A lower-precision float input, or JAX x64 being disabled, raises `PrecisionError`.
+    The recipe **MUST NOT** silently upcast.
+- **Output.** A `ConvMMDRecipeResult`. It has the §9 fields of the returned fit
+  (`parameters`, `unconstrained`, `loss`, `history`, `n_iter`, `status`, `converged`,
+  `numerical_failure`, `max_abs_grad`, `grad_tol`, `metadata`). It also has:
+  - the flags `collapsed`, `health` and `saddle`;
+  - `escapes` and `min_eigenvalue`;
+  - `covariance_floor`, `bandwidths`, `initial_parameters` and
+    `initialization_status`;
+  - `base` (a `ConvMMDSaddleFit`), `repairs` (a tuple of `ConvMMDRepairMove`, each
+    with its `ConvMMDWitness`) and `total_steps`.
+
+### 18.8 JAX contract and randomness
+
+The recipe is a **host-level driver**: Python control flow between jitted chunks,
+curvature checks and witness blocks. It is not itself `jit`-able, `grad`-able or
+`vmap`-able. All randomness comes from the one explicit `key` (default
+`PRNGKey(0)`), through these streams:
+- the start, drawn from `key`;
+- the bandwidth subsample, `fold_in(key, 3)`;
+- the witness candidates, `fold_in(key, 99)`;
+- the Lanczos starts, `fold_in(key, 7)`.
+
+The same inputs and key reproduce the same fit. No global key is read.
+
+### 18.9 Gates and evidence
+
+- **Unit evidence.** In `tests/development/test_convmmd_recipe.py`,
+  `test_convmmd_recipe_phase2.py` and `test_convmmd_recipe_inputs.py`:
+  - chunked Adam equals one constant-rate fit;
+  - rollback of a failed step;
+  - exact and Lanczos curvature against `jax.hessian`;
+  - a planted saddle that is flagged and escaped;
+  - the witness against `expected_rbf_kernel` and against J1's recorded values;
+  - `birth_at` against a NumPy reference;
+  - the Kkz invariants;
+  - the eager validation;
+  - a slow test reproducing J1's kept repair on one outlier dataset.
+- **Cross-check against J1.** Run by `scripts/convmmd_j1_crosscheck/` over all 390 of
+  J1's `kplus1_floor` datasets.
+  - Given J1's start, bandwidths, candidates and the exact curvature check, the recipe
+    reproduces J1's base and final losses to \(10^{-9}\), its escapes, repair attempts,
+    kept moves, recovered set (387/390) and health flags, on every dataset.
+  - As shipped, it recovers 387/390, the same count as J1.
+
+These are evidence for the matrix's Pending `CMMD-RECIPE-*` rows, not a qualification.
+
+### 18.10 Scope and non-claims
+
+- \(K\) is fixed by the caller; there is no model selection.
+- The noise is Gaussian. The non-Gaussian noise rules (Student-\(t\), Cauchy) are a later
+  revision.
+- The masked (§16) and selection (§17) fits are not covered by this recipe.
+- Two keep-rule limits are known and left as recipe decisions:
+  - the \(\kappa\) condition refuses repairs that make a component thinner, so a fit that
+    starts on the wrong side of a deliberately thin truth cannot be repaired;
+  - the \(z\ge3\) cut refused two correct repairs in the cross-check
+    (\(z=2.99\) and \(2.42\)).
+- There is no timing claim; `performance_claim` is `none`.
