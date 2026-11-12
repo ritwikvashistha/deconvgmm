@@ -75,32 +75,40 @@ fit = identity.fit_converged(params, observations, noise)
 denoised = identity.posterior_mean(fit.parameters, observations, noise)
 ```
 
-convMMD (see [`examples/convmmd_quickstart.py`](examples/convmmd_quickstart.py)):
-
-```python
-from deconvgmm import convmmd
-
-bandwidths = convmmd.median_bandwidths(observations)          # predeclared heuristic
-init = convmmd.ConvMMDUnconstrained(alphas=..., means=..., unconstrained_L=...)
-result = convmmd.fit_analytic(init, observations, noise, bandwidths, n_steps=300)
-denoised = convmmd.denoise(result.parameters, observations, noise)
-```
-
-Or let the robust fit recipe choose the start, floor, stopping and repairs
-(contract §18). It runs in float64 only, with float64 inputs:
+convMMD (see [`examples/convmmd_quickstart.py`](examples/convmmd_quickstart.py)).
+The robust fit recipe fits from the data alone: it chooses the start, a
+covariance floor, when to stop, and any repairs (contract §18). It runs in
+float64 only, with float64 inputs:
 
 ```python
 import jax
 jax.config.update("jax_enable_x64", True)            # before creating any arrays
 
-fit = convmmd.fit_convmmd_recipe(observations, noise, 3, key=jax.random.PRNGKey(0))
+from deconvgmm import convmmd
+
+fit = convmmd.fit_convmmd_recipe(observations, noise, 2, key=jax.random.PRNGKey(0))
 fit.converged, fit.collapsed, fit.saddle   # certificate, then two diagnostic flags
+denoised = convmmd.denoise(fit.parameters, observations, noise)
 ```
 
-`converged` is a gradient certificate (`max|grad| <= grad_tol` at the returned
-parameters) for every analytic convMMD fit. The recipe's `collapsed` and `saddle`
-are flags that never change `status`. Like every convMMD capability, the recipe is
-**Pending**.
+For full control, fit from a start you supply:
+
+```python
+bandwidths = convmmd.median_bandwidths(observations)          # predeclared heuristic
+init = convmmd.ConvMMDUnconstrained(alphas=..., means=..., unconstrained_L=...)
+result = convmmd.fit_analytic(
+    init, observations, noise, bandwidths,
+    n_steps=1000, schedule="constant", learning_rate=3e-2, weight_decay=0.0,
+    stop_at_certificate=True,                                 # stop once certified
+)
+```
+
+Every analytic convMMD fit's `converged` is a gradient certificate
+(`max|grad| <= grad_tol` at the returned parameters). A fit that stops before
+reaching it reports `MAX_ITER` rather than claiming convergence; `fit_analytic`'s
+defaults (300 cosine-decayed steps) often do. The recipe's `collapsed` and
+`saddle` are flags that never change `status`. Like every convMMD capability,
+the recipe is **Pending**.
 
 A worked, fair comparison of the two methods on shared ground-truth tasks is in
 [`notebooks/convmmd_xdgmm_comparison.ipynb`](notebooks/convmmd_xdgmm_comparison.ipynb).
