@@ -50,6 +50,13 @@ The convMMD contract `xdgmm-jax.convmmd` and its capability matrix are bumped
   `grad_tol`, before `metadata`. Code that unpacks a result by position must be updated.
 - `ConvMMDFitStatus.COMPONENT_COLLAPSED = 5` is added, reserved, and never set.
 
+### Fixed
+
+- A 0.3.0b1 test (`test_snis_callable_on_observed_subspace_agrees_with_marginalized_gaussian`)
+  compared two different computations of the same SNIS loss with `==`. On some CI runners
+  they differ by 1 ulp, so it failed intermittently. It now uses a `1e-12` relative gate.
+  The package code is unchanged.
+
 ## 0.3.0b1 — 2026-09-10 (GitHub beta; tag pending maintainer approval)
 
 ### Added — convMMD known-selection (MNAR) extension
