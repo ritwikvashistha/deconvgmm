@@ -1,9 +1,9 @@
 # convMMD capability and quality matrix
 
 - Matrix ID: `xdgmm-jax.convmmd.matrix`
-- Matrix version: `0.5.0-draft.1`
-- Applies to: [`xdgmm-jax.convmmd` contract `0.5.0-draft.1`](convmmd-model-contract.md)
-- Last updated: 2026-08-31
+- Matrix version: `0.6.0-draft.1`
+- Applies to: [`xdgmm-jax.convmmd` contract `0.6.0-draft.1`](convmmd-model-contract.md)
+- Last updated: 2026-11-11
 
 This matrix turns the convMMD contract into named, reproducible acceptance rows.
 Every row is **Pending**: specified and exercised by development tests, but **not**
@@ -51,6 +51,15 @@ analytic path carries the machine-eps oracle gate (including the direct marginal
 identity and both reductions), the SNIS path the statistical gate only, and
 `performance_claim` stays `none`.
 
+Matrix version `0.6.0-draft.1` adds the **fit-certificate** rows `CMMD-FIT-005`–`008`
+(contract §9). The analytic fits' `converged` is now the gradient certificate
+\(\max|\nabla|\le\) `grad_tol`, replacing a two-point loss-change test. It also adds the
+**robust fit recipe** rows `CMMD-RECIPE-*` (contract §18): the K + 1 start, the covariance
+floor, the bandwidth subsample, saddle-aware stopping, the health flag, witness repair under
+the Kkz keep rule, eager validation, and a per-dataset cross-check against the robustness
+campaign's J1 records. Every such row starts **Pending**, and `performance_claim` stays
+`none`.
+
 ## Status meanings
 
 | Mark | Meaning |
@@ -96,6 +105,10 @@ pinned development lane (conda env `cv`; Python 3.10.11; JAX/jaxlib 0.6.2; NumPy
 | `CMMD-FIT-004` | Monte-Carlo fit never reports spurious `CONVERGED`; `n_steps=1` is not converged | float64 | Pending | `tests/development/test_convmmd_jax_contract.py` |
 | `CMMD-STATUS-001` | A degenerate covariance surfaces as a visible NaN, never a finite success | float64 | Pending | `tests/development/test_convmmd_jax_contract.py` |
 | `CMMD-FIT-JIT-001` | Analytic and Monte-Carlo fit state kernels are jit-compatible | float64 | Pending | `tests/development/test_convmmd_jax_contract.py` |
+| `CMMD-FIT-005` | An analytic fit reports `converged` iff `max_abs_grad <= grad_tol` at the returned parameters, flipping exactly at `grad_tol`. `max_abs_grad` is the gradient there. A non-stationary point the old two-point rule certified is not converged | float64 | Pending | `tests/development/test_convmmd_fit_certificate.py` |
+| `CMMD-FIT-006` | A failed fit never certifies and reports the gradient at its rollback point. A zero-step fit certifies only a stationary start. The retired `tol` control has no effect | float64 | Pending | `tests/development/test_convmmd_fit_certificate.py` |
+| `CMMD-FIT-007` | The Monte-Carlo fit reports a gradient estimate but never certifies | float64 | Pending | `tests/development/test_convmmd_fit_certificate.py` |
+| `CMMD-FIT-008` | `schedule="constant"` is fixed-rate AdamW, the default stays cosine, an unknown schedule is rejected, and `stop_at_certificate` (off by default) freezes at the first certified iterate. Both are static under `jit` | float64 | Pending | `tests/development/test_convmmd_fit_certificate.py` |
 
 ## Comparison-evidence rows (fairness, not performance)
 
@@ -258,10 +271,30 @@ a **capability/fairness demonstration, not a performance claim** (`performance_c
 | `CMMD-SEL-HET-CMP-001` | The heteroscedastic `Ω(x̃)` task (Design A-het) carries convMMD's **machine-eps** per-object analytic gate, discloses the **no-noise-model asymmetry** (convMMD uses each object's own `S_i`; pygmmis is given the true noise field its EM imputation requires), and Task E discloses the non-Gaussian misspecification with **no predicted winner** — all `performance_claim: none` | Pending | `tests/benchmarks/test_convmmd_pygmmis_comparison.py` |
 | `CMMD-SEL-OBSMAR-CMP-001` | The `Ω(x̃)` + missing-coordinates task (Design A-mar, §17.14) carries convMMD's **machine-eps** §17.14 analytic + masked-denoiser gate, and the record + plan disclose the **exact-marginalisation-vs-inflation** asymmetry (convMMD marginalises the missing part exactly via `P_i`; pygmmis can only inflate it, its exact `R` route raising `NotImplementedError` under a selection callback — verified from source) and the no-noise-model asymmetry — all `performance_claim: none` | Pending | `tests/benchmarks/test_convmmd_pygmmis_comparison.py` |
 
+## Robust fit recipe rows (contract §18)
+
+| ID | Behavior | Required dtype | Status | Evidence |
+|---|---|---|---|---|
+| `CMMD-RECIPE-START-001` | Greedy k-means++ seeds one row per separated cluster. The nearest-centre moments, 20 zero-noise EM steps, noise deflation and eigenvalue floor follow §18.1, and the K + 1 start drops the smallest-weight component | float64 | Pending | `tests/development/test_convmmd_recipe.py` |
+| `CMMD-RECIPE-FLOOR-001` | The floor is 0.03 × the median noise variance. The loss is the plain loss on `Σ_k + fI`, and the fit reports that floored mixture with the loss recomputed exactly there. A zero floor reproduces the unfloored fit | float64 | Pending | `tests/development/test_convmmd_recipe.py` |
+| `CMMD-RECIPE-BW-001` | The median heuristic uses every row up to 2000 rows, and above that 2000 distinct rows drawn with `fold_in(key, 3)` | float64 | Pending | `tests/development/test_convmmd_recipe.py` |
+| `CMMD-RECIPE-FIT-001` | Chunked constant-rate Adam resumes to one constant-rate fit. A certified minimum stops on a chunk boundary. A step that fails inside a chunk is rolled back, and a non-finite start is never updated | float64 | Pending | `tests/development/test_convmmd_recipe_phase2.py` |
+| `CMMD-RECIPE-SADDLE-001` | The identifiable basis is orthonormal. The exact curvature check equals the projected `jax.hessian`, and Lanczos (`m = 80`) agrees with it above the cut. A planted saddle is flagged and escaped, and an unescaped saddle sets `saddle` without changing `status` | float64 | Pending | `tests/development/test_convmmd_recipe_phase2.py` |
+| `CMMD-RECIPE-HEALTH-001` | `b` and `κ` reproduce J1's recorded values. A planted degenerate component is flagged and a healthy mixture is not. The flag never changes `status`, and `COMPONENT_COLLAPSED` is never set | float64 | Pending | `tests/development/test_convmmd_recipe.py` |
+| `CMMD-RECIPE-WITNESS-001` | The witness statistic equals a direct evaluation with the package's `expected_rbf_kernel` (diagonal and full noise, blocked) and reproduces J1's recorded peaks. Candidates are subsampled only above 2000 rows | float64 | Pending | `tests/development/test_convmmd_recipe_phase2.py` |
+| `CMMD-RECIPE-REPAIR-001` | `birth_at` follows the NumPy reference move, using every row below 10 rows. Per-row loss changes average to the loss change, and the paired z has the right sign. A forced trigger is kept only under Kkz, no move is attempted on healthy J1 fits, and `witness_moves=0` is the base fit. J1's kept repair on `outliers_d5_n500\|10` is reproduced (slow) | float64 | Pending | `tests/development/test_convmmd_recipe_phase2.py`, `tests/development/test_convmmd_recipe_inputs.py` |
+| `CMMD-RECIPE-INPUT-001` | Malformed arrays, counts and rates raise `ValidationError`. A float32 input or disabled x64 raises `PrecisionError` instead of being upcast. NumPy inputs give the same fit as JAX arrays | float64 | Pending | `tests/development/test_convmmd_recipe_inputs.py` |
+| `CMMD-RECIPE-XCHECK-001` | Over all 390 of J1's `kplus1_floor` datasets, the recipe given J1's start, bandwidths and candidates reproduces J1's base and final losses (to 1e-9), escapes, repair decisions, recovered set and health flags. As shipped it recovers 387/390, as J1 does | float64 | Pending | `scripts/convmmd_j1_crosscheck/` (`results_20261111.jsonl.gz`, `summarize.py`); `docs/convmmd-recipe-crosscheck.md` |
+
 ## Explicit non-claims
 
 - No timing, throughput, memory, or accelerator claim follows from these rows;
   `performance_claim` is `none` everywhere.
+- The `CMMD-RECIPE-*` rows are evidence that the recipe is implemented as §18 specifies and
+  reproduces J1's decisions. They are not a qualification of the recipe's statistical
+  behavior beyond J1's grid (K = 3; D ∈ {2, 5, 10}; N ≤ 10,000; Gaussian noise). The
+  recipe's known keep-rule limits (§18.10) and its cost are open, and no timing claim
+  follows.
 - The convMMD-vs-XDGMM comparison holds the model class fixed to a GMM; it
   isolates the fitting objective and does **not** exercise the flexible/implicit
   models or higher-dimensional/misspecified regimes where convMMD's reference

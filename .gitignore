@@ -90,3 +90,9 @@ benchmark-results/local/
 /docs/convmmd-missing-data-primer.pdf
 /docs/convmmd-missing-data-primer.tex
 
+
+# Recovered experiment artifacts and their internal recovery notes (large, not
+# package code; the notes embed internal host aliases and local paths). The
+# public summary is docs/convmmd-recipe-crosscheck.md.
+recovered-artifacts/
+/docs/convmmd-recovery-20261109.md
