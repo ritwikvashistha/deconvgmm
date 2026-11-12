@@ -330,7 +330,14 @@ def test_projected_snis_converges_to_analytic_and_logs_ess():
 def test_snis_callable_on_observed_subspace_agrees_with_marginalized_gaussian():
     """CMMD-SEL-OBSMAR-MC-001: a CallableSelection whose omega is the per-object marginalized
     Gaussian window (evaluated on the observed subspace) reproduces the GaussianSelection SNIS
-    at a fixed key on a single mask group (the per-subspace convention of §17.14)."""
+    at a fixed key on a single mask group (the per-subspace convention of §17.14).
+
+    The two sides are not the same computation: the callable's window comes from the NumPy
+    oracle (two ``np.linalg.inv`` calls), the Gaussian side marginalizes inside the package.
+    The window itself agrees only to rounding (``CMMD-SEL-OBSMAR-MARGWIN-001`` gates it at
+    ``atol=1e-12``), and how each route rounds depends on the host CPU (NumPy's BLAS kernels
+    and XLA's CPU code are both chosen per host). On some CI runners the losses differ by
+    1 ulp, so this is a 1e-12 relative gate, not ``==``."""
 
     w, m, c, s, x, mask, bw, a, p = _instance()
     # One partial mask group (rows sharing coords {0,2}); a single group -> one omega.
@@ -349,7 +356,7 @@ def test_snis_callable_on_observed_subspace_agrees_with_marginalized_gaussian():
         params, jnp.asarray(x), jnp.asarray(mask), noise=PerItemFullNoise(jnp.asarray(s)),
         bandwidths=jnp.asarray(bw), selection=CallableSelection(subspace_omega),
         key=key, num_samples=96, dtype=jnp.float64))
-    assert v_gauss == v_call
+    np.testing.assert_allclose(v_call, v_gauss, rtol=1e-12, atol=0.0)
 
 
 # --------------------------------------------------------------------------- #
